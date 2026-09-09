@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Show de Luzes Sincronizado</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { margin: 0; background: #000; transition: background 0.05s ease; overflow: hidden; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        #mensagem { color: #888; font-family: sans-serif; text-align: center; padding: 20px; font-size: 18px; }
+        .aceso { background: #fff !important; }
+    </style>
+</head>
+<body>
+
+    <div id="mensagem">Toque na tela para conectar ao show de luzes...</div>
+
+    <script>
+        const socket = io();
+        let videoTrack = null;
+        let stroboInterval = null;
+
+        async function IniciarLanterna() {
+            document.getElementById('mensagem').innerText = "Conectado! Aguardando comando do palco...";
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                videoTrack = stream.getVideoTracks()[0];
+            } catch (err) {
+                document.getElementById('mensagem').innerText = "Conectado! Modo Tela Ativado (Erga o celular para o palco).";
+            }
+        }
+
+        // Ativa após o primeiro toque do usuário na tela (exigência dos navegadores)
+        window.addEventListener('click', IniciarLanterna, { once: true });
+        window.addEventListener('touchstart', IniciarLanterna, { once: true });
+
+        socket.on('comando_publico', (data) => {
+            clearInterval(stroboInterval);
+
+            if (data.acao === 'ligar') {
+                controlarLuz(true);
+            } else if (data.acao === 'desligar') {
+                controlarLuz(false);
+            } else if (data.acao === 'strobo') {
+                let estado = false;
+                stroboInterval = setInterval(() => {
+                    estado = !estado;
+                    controlarLuz(estado);
+                }, 100); // Velocidade do pisca (100ms)
+            }
+        });
+
+        function controlarLuz(ligar) {
+            // Efeito na Tela
+            if (ligar) {
+                document.body.classList.add('aceso');
+            } else {
+                document.body.classList.remove('aceso');
+            }
+
+            // Efeito no LED Físico (Android/Chrome)
+            if (videoTrack) {
+                try {
+                    videoTrack.applyConstraints({
+                        advanced: [{ torch: ligar }]
+                    });
+                } catch (e) { }
+            }
+        }
+    </script>
+</body>
+</html>

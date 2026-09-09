@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do DJ de Luzes</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding: 50px; }
+        button { padding: 20px 40px; font-size: 20px; margin: 15px; cursor: pointer; border-radius: 8px; border: none; font-weight: bold; }
+        .btn-on { background: #4CAF50; color: white; }
+        .btn-off { background: #f44336; color: white; }
+        .btn-flash { background: #ffeb3b; color: black; }
+    </style>
+</head>
+<body>
+    <h1>Mesa de Controle - Flash do Público</h1>
+    <p>Clique nos botões abaixo para disparar o efeito visual na arena:</p>
+    
+    <button class="btn-on" onclick="enviarComando('ligar')">ACENDER TUDO</button>
+    <button class="btn-off" onclick="enviarComando('desligar')">APAGAR TUDO</button>
+    <button class="btn-flash" onclick="enviarComando('strobo')">EFEITO ESTROBO</button>
+
+    <script>
+        const socket = io();
+        function enviarComando(acao) {
+            socket.emit('comando_admin', { acao: acao });
+        }
+    </script>
+</body>
+</html>
